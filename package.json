@@ -7,7 +7,6 @@
   },
   "dependencies": {
     "react-native": "^0.4.4",
-    "react-native-chart": "^0.0.4",
     "react-native-svg": "^0.1.5"
   }
 }

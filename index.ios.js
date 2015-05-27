@@ -2,12 +2,13 @@
 
 var React = require('react-native');
 var d3 = require('d3');
+var Svg = require('react-native-svg'); 
+var Path = Svg.Path;
 
 var {
     AppRegistry,
     StyleSheet,
     Text,
-    Image,
     View,
 } = React;
 
@@ -15,12 +16,16 @@ var WeatherApp = React.createClass({
     getInitialState: function() {
         return {
             current: {
-                city: "loading",
-                weather: "loading",
+                city: "",
+                weather: "",
                 temp: "",
                 date: "",
                 icon: ""
-            }
+            },
+            chart: {},
+            containerSize: {},
+            chartPositonY: 0,
+            chartHeight: 60
         }
     },
     render: function() {
@@ -28,6 +33,8 @@ var WeatherApp = React.createClass({
         var data = {};
         var current = {};
         var _current = [];
+        var temp_max_arr = [];
+        var temp_min_arr = [];
         fetch("http://api.openweathermap.org/data/2.5/forecast?q=Shanghai,cn&lang=zh_cn")
             .then(function(response) {
                 data = JSON.parse(response._bodyText);
@@ -43,31 +50,65 @@ var WeatherApp = React.createClass({
                     date: _today[1] + '.' + _today[2] + ' ' + _today[0],
                     icon: icon(_current.weather[0].icon)
                 }
-
                 var days = week(data.list).map((item, index) => {
+                    temp_max_arr.push(item.max);
+                    temp_min_arr.push(item.min);
+
                     var day = 
                         <Text style={ styles.day }>
                             { item.week }
                         </Text>
-                    var icon = 
+                    var iconUp = 
                         <Text style = {[styles.day_icon, styles.weather_icon]}>
                             { item.iconUp }
+                        </Text>
+                    var iconDown = 
+                        <Text style = {[styles.day_icon, styles.weather_icon]}>
+                            { item.iconDown }
                         </Text>
                     var date = 
                         <Text style={ styles.date }>
                             { item.date }
                         </Text>
                     return (
-                        <View style={ styles.dayCol }>
+                        <View style={ styles.dayCol } key={item.week}>
                           {day}
-                          {icon}
+                          {iconUp}
+                          <View style={{flex: 2}} onLayout={(event) => {
+                              that.state.chartPositonY = 0 - event.nativeEvent.layout.height * 2;
+                              that.state.chartHeight = event.nativeEvent.layout.height;
+                            }}/>
+                          {iconDown}
                           {date}
                         </View>
                     );
                 });
+                temp_max_arr.push(temp_max_arr[0]);
+                temp_max_arr.unshift(temp_max_arr[0]);
+                temp_min_arr.push(temp_min_arr[0]);
+                temp_min_arr.unshift(temp_min_arr[0]);
+                var domain = [
+                    d3.max([d3.max(temp_max_arr), d3.max(temp_min_arr)]),
+                    d3.min([d3.min(temp_max_arr), d3.min(temp_min_arr)])
+                ]
+                var chart = 
+                    <Svg width={that.state.containerSize.width} height={that.state.chartHeight} forceUpdate="0" 
+                        style={{
+                            positon: 'absolute',
+                            width: that.state.containerSize.width, 
+                            height: that.state.chartHeight, 
+                            top: that.state.chartPositonY,
+                            left: 0, 
+                            backgroundColor:'transparent'}}>
+                        <Path fill="none" stroke="#d35400" strokeWidth="2" strokeMiterlimit="10"
+                        d={path(temp_max_arr, domain, that.state.containerSize.width, 60)} />
+                        <Path fill="none" stroke="#a0dcdc" strokeWidth="2" strokeMiterlimit="10"
+                        d={path(temp_min_arr, domain, that.state.containerSize.width, 60)} />
+                    </Svg>;
                 that.setState({
                     current: current,
-                    days: days
+                    days: days,
+                    chart: chart
                 });
 
             })
@@ -80,10 +121,16 @@ var WeatherApp = React.createClass({
             .done();
 
         return ( 
-          <View style = { styles.container }>
-            <Text style = { styles.city_day }> 
-              { this.state.current.city } / { this.state.current.date }
-            </Text>
+          <View style = { styles.container } onLayout={(event) => {
+              var {width, height} = event.nativeEvent.layout;
+              this.state.containerSize.width = width;
+              this.state.containerSize.height = height;
+            }}>
+            <View style = { styles.city_day }>
+                <Text style = { styles.city_day_text }> 
+                  { this.state.current.city } / { this.state.current.date }
+                </Text>
+            </View>
             <Text style = { styles.status }>
               { this.state.current.weather } { this.state.current.temp }° 
             </Text> 
@@ -91,12 +138,25 @@ var WeatherApp = React.createClass({
               { this.state.current.icon } 
             </Text> 
             <View style = { styles.week }>
-              { this.state.days }
+                { this.state.days }
             </View>
+            { this.state.chart }
           </View>
         );
     }
 });
+
+function path(data, domain, width, height){
+    var x = d3.scale.linear().domain([0, data.length - 1]).range([0, width]);
+    var y = d3.scale.linear().domain(domain).range([0, height]);
+    var line = d3.svg.line().x(function(d,i) { 
+            return x(i); 
+        }).y(function(d) { 
+            return y(d);
+        })
+    .interpolate("basis");
+    return line(data);
+}
 // to C
 function f2c(temp) {
     return parseInt(temp - 273.15);
@@ -172,43 +232,37 @@ var week = function (list) {
 
     return arr;
 };
-var drawSine = function(t) {
-  var path = `M ${0} ${Math.sin(t) * 2}`;
-  var x, y;
-
-  for (var i = 0; i <= 10; i += 0.5) {
-    x = i * 2;
-    y = Math.sin(t + x) * 2;
-    path = path + ` L ${x} ${y}`
-  }
-
-  return path;
-}
 
 var styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#3d566e',
+        flexDirection: 'column'
     },
     city_day: {
+        flex: 1,
+        alignItems: 'center',
+        flexDirection: 'row',
+    },
+    city_day_text: {
+        justifyContent: 'center',
+        alignSelf: 'auto',
+        flex: 1,
         fontSize: 20,
         textAlign: 'center',
         color: '#95a5a6',
-        marginTop: 60,
     },
     status: {
         fontSize: 20,
         textAlign: 'center',
         color: '#f1c40f',
-        marginTop: 60,
         fontWeight: 'bold',
-        marginBottom: 50,
     },
     current: {
         textAlign: 'center',
-        fontSize: 150,
+        fontSize: 130,
         color: '#ffffff',
-        marginBottom: 50,
+        flex: 4
     },
     dayCol: {
         borderRightColor: '#4d667e',
@@ -223,20 +277,22 @@ var styles = StyleSheet.create({
     },
     week: {
         flexDirection: 'row',
+        flex: 4
     },
     day_icon: {
         fontSize: 20,
         color: '#ffffff',
-        marginTop: 10
+        flex: 1,
     },
     day: {
         fontSize: 12,
         color: '#ffffff',
+        flex: 1,
     },
     date: {
         fontSize: 12,
         color: '#ffffff',
-        marginTop: 10
+        flex: 1,
     }
 });
 
