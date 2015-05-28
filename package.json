@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "react-native": "^0.4.4",
+    "react-native-overlay": "^0.2.2",
     "react-native-svg": "^0.1.5"
   }
 }

@@ -1,10 +1,11 @@
 'use strict';
 
 var React = require('react-native');
+var Dimensions = require('Dimensions');
 var Common = require('./common/common');
 var WeekView = require('./components/WeekView');
 var Chart = require('./components/Chart');
-var Dimensions = require('Dimensions');
+var LoadingOverlay = require('./components/LoadingOverlay');
 
 
 var {
@@ -35,7 +36,10 @@ var WeatherApp = React.createClass({
             chartTop: flexItemHeight * 11,
             //chartData: [[],[]], TODO: can not fire binding,why?
             chartData: null,
-            chartColors : ["#d35400","#a0dcdc"]
+            chartLineColors : ["#d35400","#a0dcdc"],
+            chartPointFillColors : ["#e67e22","#a0dcdc"],
+            chartPointStrokeColors : ["#d35400","#ffffff"],
+            isOverlayVisible: true,
         }
     },
     getCurrent: function(data){
@@ -78,7 +82,7 @@ var WeatherApp = React.createClass({
                     current: current,
                     chartData: chartData,
                     weekViewData: data.list,
-
+                    isOverlayVisible: false,
                 });
             })
             .catch((error) => {
@@ -106,8 +110,11 @@ var WeatherApp = React.createClass({
                     width={this.state.chartWidth} 
                     height={this.state.chartHeight}
                     top={this.state.chartTop}
-                    colors={this.state.chartColors}
+                    pointFillColors={this.state.chartPointFillColors}
+                    pointStrokeColors={this.state.chartPointStrokeColors}
+                    lineColors={this.state.chartLineColors}
                      />
+            <LoadingOverlay isVisible={this.state.isOverlayVisible} />
           </View>
         );
     }

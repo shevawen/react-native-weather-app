@@ -19,7 +19,9 @@ var Chart = React.createClass({
     width: React.PropTypes.number,
     height: React.PropTypes.number,
     top: React.PropTypes.number,
-    colors: React.PropTypes.array,
+    pointFillColors: React.PropTypes.array,
+    pointStrokeColors: React.PropTypes.array,
+    lineColors: React.PropTypes.array,
   },
   getValueDomain: function(){
     var _max = [];
@@ -45,7 +47,7 @@ var Chart = React.createClass({
     var that = this;
     return this.props.data.map((item, index) => {
       return (
-        <Path fill="none" stroke={that.props.colors[index]} strokeWidth="2" strokeMiterlimit="10"
+        <Path fill="none" stroke={that.props.lineColors[index]} strokeWidth="2" strokeMiterlimit="10"
           d={that.getPathD(item)} />);
     });
   },
@@ -60,7 +62,8 @@ var Chart = React.createClass({
           var cx = x(_index);
           var cy = y(point);
           var d = "M " + cx + " " + cy + " m -3,0 a 3,3 0 1,0 6,0 a 3,3 0 1,0 -6,0";
-          paths.push(<Path fill={that.props.colors[index]} stroke="#ffffff" 
+          paths.push(<Path fill={that.props.pointFillColors[index]} 
+                      stroke={that.props.pointStrokeColors[index]} 
                       strokeWidth="1" strokeMiterlimit="10" 
                       d={d} />);
         });
