@@ -1,6 +1,6 @@
 ## react natvie weather app
 
-Weaher App buid with react native fork from sofish's Weather App(https://github.com/sofish/weather)
+Weaher App build with react native fork from sofish's Weather App(https://github.com/sofish/weather)
 
 Work in progress.
 
@@ -13,3 +13,8 @@ Work in progress.
 ### Preview
 
 ![ScreenShot](/App Screen Shot.png)
+
+### Thanks
+
+1. [brentvatne/react-native-svg](https://github.com/brentvatne/react-native-overlay)
+2. [brentvatne/react-native-overlay](https://github.com/brentvatne/react-native-svg)
