@@ -16,5 +16,5 @@ Work in progress.
 
 ### Thanks
 
-1. [brentvatne/react-native-svg](https://github.com/brentvatne/react-native-overlay)
-2. [brentvatne/react-native-overlay](https://github.com/brentvatne/react-native-svg)
+1. [brentvatne/react-native-svg](https://github.com/brentvatne/react-native-svg)
+2. [brentvatne/react-native-overlay](https://github.com/brentvatne/react-native-overlay)
